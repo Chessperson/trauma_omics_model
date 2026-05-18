@@ -1,0 +1,7 @@
+*.xlsx
+*.csv
+outputs/latents/
+outputs/checkpoints/
+__pycache__/
+*.pyc
+.DS_Store
