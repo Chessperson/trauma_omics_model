@@ -1,0 +1,87 @@
+{
+  "n_proteins_queried": 50,
+  "n_with_dgidb_drugs": 4,
+  "n_druggable_hits": 4,
+  "top_10_by_priority": [
+    {
+      "final_rank": 1,
+      "feature": "pancreatic alpha-amylase",
+      "gene_symbol": "AMY2A",
+      "direction": "\u2191 INCREASE",
+      "priority_score": 1.0661,
+      "ot_approved_drugs": ""
+    },
+    {
+      "final_rank": 2,
+      "feature": "haptoglobin",
+      "gene_symbol": "HP",
+      "direction": "\u2191 INCREASE",
+      "priority_score": 0.9527,
+      "ot_approved_drugs": ""
+    },
+    {
+      "final_rank": 3,
+      "feature": "heme oxygenase 2",
+      "gene_symbol": "HMOX2",
+      "direction": "\u2191 INCREASE",
+      "priority_score": 0.7943,
+      "ot_approved_drugs": ""
+    },
+    {
+      "final_rank": 4,
+      "feature": "eukaryotic translation initiation factor 4b",
+      "gene_symbol": "EIF4B",
+      "direction": "\u2191 INCREASE",
+      "priority_score": 0.6348,
+      "ot_approved_drugs": ""
+    },
+    {
+      "final_rank": 5,
+      "feature": "protein-tyrosine sulfotransferase 2",
+      "gene_symbol": "TPST2",
+      "direction": "\u2191 INCREASE",
+      "priority_score": 0.5936,
+      "ot_approved_drugs": ""
+    },
+    {
+      "final_rank": 6,
+      "feature": "endonuclease 8-like 1",
+      "gene_symbol": "NEIL1",
+      "direction": "\u2191 INCREASE",
+      "priority_score": 0.5845,
+      "ot_approved_drugs": ""
+    },
+    {
+      "final_rank": 7,
+      "feature": "u8 snorna-decapping enzyme",
+      "gene_symbol": "U8",
+      "direction": "\u2191 INCREASE",
+      "priority_score": 0.5681,
+      "ot_approved_drugs": ""
+    },
+    {
+      "final_rank": 8,
+      "feature": "adp-ribosylation factor-like protein 15",
+      "gene_symbol": "ARL15",
+      "direction": "\u2191 INCREASE",
+      "priority_score": 0.5483,
+      "ot_approved_drugs": ""
+    },
+    {
+      "final_rank": 9,
+      "feature": "cryptic protein",
+      "gene_symbol": "CRYPTIC",
+      "direction": "\u2191 INCREASE",
+      "priority_score": 0.5303,
+      "ot_approved_drugs": ""
+    },
+    {
+      "final_rank": 10,
+      "feature": "lymphocyte-specific protein 1",
+      "gene_symbol": "LSP1",
+      "direction": "\u2191 INCREASE",
+      "priority_score": 0.5302,
+      "ot_approved_drugs": ""
+    }
+  ]
+}

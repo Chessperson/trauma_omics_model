@@ -1,0 +1,8 @@
+{
+  "test_auroc": 0.9,
+  "n_patients": 101,
+  "n_test": 21,
+  "n_responders": 0,
+  "mean_treatment_effect": 0.001419047619047619,
+  "mean_traj_div_72": 1.3924714285714286
+}

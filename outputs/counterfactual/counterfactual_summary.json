@@ -1,0 +1,81 @@
+{
+  "fold": 0,
+  "n_test_patients": 39,
+  "n_nonsurvivor_analyzed": 13,
+  "n_converged": 4,
+  "convergence_rate": 0.3076923076923077,
+  "mean_risk_reduction": 0.20803076923076924,
+  "cf_target_prob": 0.3,
+  "top_10_candidates": [
+    {
+      "rank": 1,
+      "feature": "protein-tyrosine sulfotransferase 2",
+      "direction": "\u2191 INCREASE",
+      "importance_score": 0.593561053276062,
+      "consistency": 1.0
+    },
+    {
+      "rank": 2,
+      "feature": "endonuclease 8-like 1",
+      "direction": "\u2191 INCREASE",
+      "importance_score": 0.5844677686691284,
+      "consistency": 1.0
+    },
+    {
+      "rank": 3,
+      "feature": "u8 snorna-decapping enzyme",
+      "direction": "\u2191 INCREASE",
+      "importance_score": 0.5681111812591553,
+      "consistency": 1.0
+    },
+    {
+      "rank": 4,
+      "feature": "adp-ribosylation factor-like protein 15",
+      "direction": "\u2191 INCREASE",
+      "importance_score": 0.548286497592926,
+      "consistency": 1.0
+    },
+    {
+      "rank": 5,
+      "feature": "pancreatic alpha-amylase",
+      "direction": "\u2191 INCREASE",
+      "importance_score": 0.5330538428746737,
+      "consistency": 0.6923076923076923
+    },
+    {
+      "rank": 6,
+      "feature": "cryptic protein",
+      "direction": "\u2191 INCREASE",
+      "importance_score": 0.530277261367211,
+      "consistency": 0.6923076923076923
+    },
+    {
+      "rank": 7,
+      "feature": "lymphocyte-specific protein 1",
+      "direction": "\u2191 INCREASE",
+      "importance_score": 0.5301909355016855,
+      "consistency": 0.6923076923076923
+    },
+    {
+      "rank": 8,
+      "feature": "inositol-tetrakisphosphate 1-kinase",
+      "direction": "\u2191 INCREASE",
+      "importance_score": 0.5300566599919245,
+      "consistency": 0.6923076923076923
+    },
+    {
+      "rank": 9,
+      "feature": "tumor necrosis factor receptor superfamily member 14",
+      "direction": "\u2191 INCREASE",
+      "importance_score": 0.5299205688329843,
+      "consistency": 0.6923076923076923
+    },
+    {
+      "rank": 10,
+      "feature": "calcium-binding protein 39-like",
+      "direction": "\u2191 INCREASE",
+      "importance_score": 0.5298057702871469,
+      "consistency": 0.6923076923076923
+    }
+  ]
+}

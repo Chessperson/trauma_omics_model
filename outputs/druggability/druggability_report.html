@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Druggability Report — PAMPer Counterfactual Analysis</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0d1117; --surface:#161b22; --border:#21262d;
+    --accent:#58a6ff; --accent2:#3fb950; --accent3:#f78166;
+    --muted:#8b949e; --text:#e6edf3; --subtext:#c9d1d9;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text);
+          font-family:'DM Sans',sans-serif; font-weight:300;
+          line-height:1.7; padding:48px 24px; }
+  .page { max-width:1000px; margin:0 auto; }
+  .header { border-bottom:1px solid var(--border);
+             padding-bottom:32px; margin-bottom:40px; }
+  .tag { font-family:'DM Mono',monospace; font-size:11px;
+          letter-spacing:.12em; color:var(--accent);
+          text-transform:uppercase; margin-bottom:12px; }
+  h1 { font-family:'DM Serif Display',serif; font-size:36px;
+        font-weight:400; line-height:1.2; margin-bottom:8px; }
+  h1 em { font-style:italic; color:var(--accent); }
+  .sub { font-size:13px; color:var(--muted);
+          font-family:'DM Mono',monospace; }
+  h2 { font-family:'DM Serif Display',serif; font-size:20px;
+        font-weight:400; margin:40px 0 16px;
+        display:flex; align-items:center; gap:10px; }
+  h2::before { content:''; display:block; width:3px; height:20px;
+                background:var(--accent); border-radius:2px; }
+  h2.green::before { background:var(--accent2); }
+  table { width:100%; border-collapse:collapse; font-size:12px;
+           margin-bottom:16px; }
+  th { font-family:'DM Mono',monospace; font-size:10px;
+        letter-spacing:.08em; text-transform:uppercase;
+        color:var(--muted); padding:8px 10px; text-align:left;
+        border-bottom:1px solid var(--border); }
+  td { padding:8px 10px; border-bottom:1px solid #1a1f26;
+        color:var(--subtext); vertical-align:top; }
+  tr:hover td { background:rgba(88,166,255,.03); }
+  code { font-family:'DM Mono',monospace; font-size:11px;
+          background:rgba(88,166,255,.1); color:var(--accent);
+          padding:1px 5px; border-radius:3px; }
+  .hit-card { background:var(--surface); border:1px solid var(--border);
+               border-radius:8px; padding:20px; margin-bottom:12px; }
+  .hit-header { display:flex; align-items:center; gap:12px;
+                 margin-bottom:12px; }
+  .hit-rank { font-family:'DM Mono',monospace; font-size:12px;
+               color:var(--accent); font-weight:500; }
+  .hit-name { font-size:15px; font-weight:400; color:var(--text); }
+  .hit-gene { font-family:'DM Mono',monospace; font-size:11px;
+               background:rgba(63,185,80,.1); color:var(--accent2);
+               padding:2px 7px; border-radius:3px; }
+  .hit-row { display:flex; gap:16px; margin-bottom:6px; font-size:12px; }
+  .hit-label { width:160px; color:var(--muted);
+                font-family:'DM Mono',monospace; font-size:11px;
+                flex-shrink:0; }
+  .hit-val { color:var(--subtext); }
+  .callout { background:rgba(88,166,255,.07);
+              border:1px solid rgba(88,166,255,.2);
+              border-radius:8px; padding:16px 20px;
+              font-size:13px; color:var(--subtext); margin:16px 0; }
+  .stat-grid { display:grid;
+                grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+                gap:12px; margin-bottom:32px; }
+  .stat { background:var(--surface); border:1px solid var(--border);
+           border-radius:8px; padding:16px; position:relative;
+           overflow:hidden; }
+  .stat::after { content:''; position:absolute; top:0; left:0;
+                  right:0; height:2px; background:var(--accent); }
+  .stat.green::after { background:var(--accent2); }
+  .stat-val { font-family:'DM Serif Display',serif; font-size:28px;
+               line-height:1; margin-bottom:4px; }
+  .stat-lbl { font-family:'DM Mono',monospace; font-size:10px;
+               text-transform:uppercase; letter-spacing:.08em;
+               color:var(--muted); }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div class="tag">PAMPer Trial · Counterfactual Proteomics · In Silico Therapeutics</div>
+    <h1>Druggability Report —<br><em>Counterfactual Therapeutic Candidates</em></h1>
+    <div class="sub">Top 50 counterfactual proteins cross-referenced against DGIdb + OpenTargets</div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat">
+      <div class="stat-val">50</div>
+      <div class="stat-lbl">Proteins queried</div>
+    </div>
+    <div class="stat green">
+      <div class="stat-val">4</div>
+      <div class="stat-lbl">Druggable hits</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val">0</div>
+      <div class="stat-lbl">With approved drugs</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val">20.8%</div>
+      <div class="stat-lbl">Mean risk reduction</div>
+    </div>
+  </div>
+
+  <h2 class="green">Druggable Hits — Actionable Targets</h2>
+  <div class="callout">
+    Proteins whose counterfactual modulation would reduce predicted mortality,
+    and for which drug interactions are known. Direction indicates whether
+    the protein needs to <strong>increase</strong> or <strong>decrease</strong>
+    for survival — this should match the drug mechanism.
+  </div>
+  
+        <div class="hit-card">
+          <div class="hit-header">
+            <span class="hit-rank">#1</span>
+            <span class="hit-name">Pancreatic Alpha-Amylase</span>
+            <span class="hit-gene">AMY2A</span>
+          </div>
+          <div class="hit-body">
+            <div class="hit-row">
+              <span class="hit-label">Direction needed</span>
+              <span class="hit-val">↑ INCREASE in 69% of patients</span>
+            </div>
+            <div class="hit-row">
+              <span class="hit-label">Approved drugs</span>
+              <span class="hit-val">None identified</span>
+            </div>
+            <div class="hit-row">
+              <span class="hit-label">Known interactions</span>
+              <span class="hit-val"> |  |  |  | </span>
+            </div>
+            <div class="hit-row">
+              <span class="hit-label">Priority score</span>
+              <span class="hit-val">1.0661</span>
+            </div>
+          </div>
+        </div>
+        <div class="hit-card">
+          <div class="hit-header">
+            <span class="hit-rank">#2</span>
+            <span class="hit-name">Haptoglobin</span>
+            <span class="hit-gene">HP</span>
+          </div>
+          <div class="hit-body">
+            <div class="hit-row">
+              <span class="hit-label">Direction needed</span>
+              <span class="hit-val">↑ INCREASE in 69% of patients</span>
+            </div>
+            <div class="hit-row">
+              <span class="hit-label">Approved drugs</span>
+              <span class="hit-val">None identified</span>
+            </div>
+            <div class="hit-row">
+              <span class="hit-label">Known interactions</span>
+              <span class="hit-val"> |  |  |  | </span>
+            </div>
+            <div class="hit-row">
+              <span class="hit-label">Priority score</span>
+              <span class="hit-val">0.9527</span>
+            </div>
+          </div>
+        </div>
+        <div class="hit-card">
+          <div class="hit-header">
+            <span class="hit-rank">#3</span>
+            <span class="hit-name">Heme Oxygenase 2</span>
+            <span class="hit-gene">HMOX2</span>
+          </div>
+          <div class="hit-body">
+            <div class="hit-row">
+              <span class="hit-label">Direction needed</span>
+              <span class="hit-val">↑ INCREASE in 69% of patients</span>
+            </div>
+            <div class="hit-row">
+              <span class="hit-label">Approved drugs</span>
+              <span class="hit-val">None identified</span>
+            </div>
+            <div class="hit-row">
+              <span class="hit-label">Known interactions</span>
+              <span class="hit-val"> |  |  |  | </span>
+            </div>
+            <div class="hit-row">
+              <span class="hit-label">Priority score</span>
+              <span class="hit-val">0.7943</span>
+            </div>
+          </div>
+        </div>
+        <div class="hit-card">
+          <div class="hit-header">
+            <span class="hit-rank">#4</span>
+            <span class="hit-name">Eukaryotic Translation Initiation Factor 4B</span>
+            <span class="hit-gene">EIF4B</span>
+          </div>
+          <div class="hit-body">
+            <div class="hit-row">
+              <span class="hit-label">Direction needed</span>
+              <span class="hit-val">↑ INCREASE in 69% of patients</span>
+            </div>
+            <div class="hit-row">
+              <span class="hit-label">Approved drugs</span>
+              <span class="hit-val">None identified</span>
+            </div>
+            <div class="hit-row">
+              <span class="hit-label">Known interactions</span>
+              <span class="hit-val"> | </span>
+            </div>
+            <div class="hit-row">
+              <span class="hit-label">Priority score</span>
+              <span class="hit-val">0.6348</span>
+            </div>
+          </div>
+        </div>
+
+  <h2>Full Ranked Table (Top 30)</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th><th>Protein</th><th>Gene</th><th>Direction</th>
+        <th>CF Score</th><th>Consistency</th><th>Drug Score</th>
+        <th>Priority</th><th>N drugs</th><th>Approved drugs</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr style="background:rgba(63,185,80,0.08);">
+          <td>1</td>
+          <td><strong>pancreatic alpha-amylase</strong></td>
+          <td><code>AMY2A</code></td>
+          <td>↑ INCREASE</td>
+          <td>0.5331</td>
+          <td>69%</td>
+          <td>1.000</td>
+          <td>1.0661</td>
+          <td>20</td>
+          <td>—</td>
+        </tr>
+        <tr style="background:rgba(63,185,80,0.08);">
+          <td>2</td>
+          <td><strong>haptoglobin</strong></td>
+          <td><code>HP</code></td>
+          <td>↑ INCREASE</td>
+          <td>0.5293</td>
+          <td>69%</td>
+          <td>0.800</td>
+          <td>0.9527</td>
+          <td>8</td>
+          <td>—</td>
+        </tr>
+        <tr style="background:rgba(63,185,80,0.08);">
+          <td>3</td>
+          <td><strong>heme oxygenase 2</strong></td>
+          <td><code>HMOX2</code></td>
+          <td>↑ INCREASE</td>
+          <td>0.5295</td>
+          <td>69%</td>
+          <td>0.500</td>
+          <td>0.7943</td>
+          <td>5</td>
+          <td>—</td>
+        </tr>
+        <tr style="background:rgba(63,185,80,0.08);">
+          <td>4</td>
+          <td><strong>eukaryotic translation initiation factor 4b</strong></td>
+          <td><code>EIF4B</code></td>
+          <td>↑ INCREASE</td>
+          <td>0.5290</td>
+          <td>69%</td>
+          <td>0.200</td>
+          <td>0.6348</td>
+          <td>2</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td><strong>protein-tyrosine sulfotransferase 2</strong></td>
+          <td><code>TPST2</code></td>
+          <td>↑ INCREASE</td>
+          <td>0.5936</td>
+          <td>100%</td>
+          <td>0.000</td>
+          <td>0.5936</td>
+          <td>0</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>6</td>
+          <td><strong>endonuclease 8-like 1</strong></td>
+          <td><code>NEIL1</code></td>
+          <td>↑ INCREASE</td>
+          <td>0.5845</td>
+          <td>100%</td>
+          <td>0.000</td>
+          <td>0.5845</td>
+          <td>0</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>7</td>
+          <td><strong>u8 snorna-decapping enzyme</strong></td>
+          <td><code>U8</code></td>
+          <td>↑ INCREASE</td>
+          <td>0.5681</td>
+          <td>100%</td>
+          <td>0.000</td>
+          <td>0.5681</td>
+          <td>0</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>8</td>
+          <td><strong>adp-ribosylation factor-like protein 15</strong></td>
+          <td><code>ARL15</code></td>
+          <td>↑ INCREASE</td>
+          <td>0.5483</td>
+          <td>100%</td>
+          <td>0.000</td>
+          <td>0.5483</td>
+          <td>0</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>9</td>
+          <td><strong>cryptic protein</strong></td>
+          <td><code>CRYPTIC</code></td>
+          <td>↑ INCREASE</td>
+          <td>0.5303</td>
+          <td>69%</td>
+          <td>0.000</td>
+          <td>0.5303</td>
+          <td>0</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>10</td>
+          <td><strong>lymphocyte-specific protein 1</strong></td>
+          <td><code>LSP1</code></td>
+          <td>↑ INCREASE</td>
+          <td>0.5302</td>
+          <td>69%</td>
+          <td>0.000</td>
+          <td>0.5302</td>
+          <td>0</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>11</td>
+          <td><strong>inositol-tetrakisphosphate 1-kinase</strong></td>
+          <td><code>ITPK1</code></td>
+          <td>↑ INCREASE</td>
+          <td>0.5301</td>
+          <td>69%</td>
+          <td>0.000</td>
+          <td>0.5301</td>
+          <td>0</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>12</td>
+          <td><strong>tumor necrosis factor receptor superfamily member 14</strong></td>
+          <td><code>TNFRSF</code></td>
+          <td>↑ INCREASE</td>
+          <td>0.5299</td>
+          <td>69%</td>
+          <td>0.000</td>
+          <td>0.5299</td>
+          <td>0</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>13</td>
+          <td><strong>calcium-binding protein 39-like</strong></td>
+          <td><code>CAB39L</code></td>
+          <td>↑ INCREASE</td>
+          <td>0.5298</td>
+          <td>69%</td>
+          <td>0.000</td>
+          <td>0.5298</td>
+          <td>0</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>14</td>
+          <td><strong>dnaj homolog subfamily c member 11</strong></td>
+          <td><code>DNAJC11</code></td>
+          <td>↑ INCREASE</td>
+          <td>0.5296</td>
+          <td>69%</td>
+          <td>0.000</td>
+          <td>0.5296</td>
+          <td>0</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>15</td>
+          <td><strong>leucine-rich repeat-containing protein 4c</strong></td>
+          <td><code>LEUCINE</code></td>
+          <td>↑ INCREASE</td>
+          <td>0.5296</td>
+          <td>69%</td>
+          <td>0.000</td>
+          <td>0.5296</td>
+          <td>0</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>16</td>
+          <td><strong>sh3 and multiple ankyrin repeat domains protein 1.1</strong></td>
+          <td><code>SH3</code></td>
+          <td>↑ INCREASE</td>
+          <td>0.5294</td>
+          <td>69%</td>
+          <td>0.000</td>
+          <td>0.5294</td>
+          <td>0</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>17</td>
+          <td><strong>insulin-like growth factor-binding protein 2</strong></td>
+          <td><code>IGFBP2</code></td>
+          <td>↑ INCREASE</td>
+          <td>0.5293</td>
+          <td>69%</td>
+          <td>0.000</td>
+          <td>0.5293</td>
+          <td>0</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>18</td>
+          <td><strong>izumo sperm-egg fusion protein 4</strong></td>
+          <td><code>IZUMO</code></td>
+          <td>↑ INCREASE</td>
+          <td>0.5290</td>
+          <td>69%</td>
+          <td>0.000</td>
+          <td>0.5290</td>
+          <td>0</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>19</td>
+          <td><strong>bis(5'-nucleosyl)-tetraphosphatase [asymmetrical]</strong></td>
+          <td><code>BIS</code></td>
+          <td>↑ INCREASE</td>
+          <td>0.5288</td>
+          <td>69%</td>
+          <td>0.000</td>
+          <td>0.5288</td>
+          <td>0</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>20</td>
+          <td><strong>pdz and lim domain protein 1</strong></td>
+          <td><code>PDLIM1</code></td>
+          <td>↑ INCREASE</td>
+          <td>0.5288</td>
+          <td>69%</td>
+          <td>0.000</td>
+          <td>0.5288</td>
+          <td>0</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>21</td>
+          <td><strong>granulocyte colony-stimulating factor receptor</strong></td>
+          <td><code>COLONY</code></td>
+          <td>↑ INCREASE</td>
+          <td>0.5288</td>
+          <td>69%</td>
+          <td>0.000</td>
+          <td>0.5288</td>
+          <td>0</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>22</td>
+          <td><strong>dual specificity protein phosphatase 13 isoform a</strong></td>
+          <td><code>DUAL</code></td>
+          <td>↑ INCREASE</td>
+          <td>0.5288</td>
+          <td>69%</td>
+          <td>0.000</td>
+          <td>0.5288</td>
+          <td>0</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>23</td>
+          <td><strong>uncharacterized protein c14orf93</strong></td>
+          <td><code>tb protein</code></td>
+          <td>↑ INCREASE</td>
+          <td>0.5287</td>
+          <td>69%</td>
+          <td>0.000</td>
+          <td>0.5287</td>
+          <td>0</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>24</td>
+          <td><strong>histone deacetylase 4</strong></td>
+          <td><code>HISTONE</code></td>
+          <td>↑ INCREASE</td>
+          <td>0.5287</td>
+          <td>69%</td>
+          <td>0.000</td>
+          <td>0.5287</td>
+          <td>0</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>25</td>
+          <td><strong>mrna turnover protein 4 homolog</strong></td>
+          <td><code>MRNA</code></td>
+          <td>↑ INCREASE</td>
+          <td>0.5286</td>
+          <td>69%</td>
+          <td>0.000</td>
+          <td>0.5286</td>
+          <td>0</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>26</td>
+          <td><strong>hemopexin.2</strong></td>
+          <td><code>HEMOPEXI</code></td>
+          <td>↑ INCREASE</td>
+          <td>0.5285</td>
+          <td>69%</td>
+          <td>0.000</td>
+          <td>0.5285</td>
+          <td>0</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>27</td>
+          <td><strong>homeobox protein mox-2</strong></td>
+          <td><code>homeobox gene</code></td>
+          <td>↑ INCREASE</td>
+          <td>0.5284</td>
+          <td>69%</td>
+          <td>0.000</td>
+          <td>0.5284</td>
+          <td>0</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>28</td>
+          <td><strong>fc_mouse.92</strong></td>
+          <td><code>FC_MOUSE</code></td>
+          <td>↑ INCREASE</td>
+          <td>0.5284</td>
+          <td>69%</td>
+          <td>0.000</td>
+          <td>0.5284</td>
+          <td>0</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>29</td>
+          <td><strong>b-cell lymphoma/leukemia 11a</strong></td>
+          <td><code>CELL</code></td>
+          <td>↑ INCREASE</td>
+          <td>0.5284</td>
+          <td>69%</td>
+          <td>0.000</td>
+          <td>0.5284</td>
+          <td>0</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>30</td>
+          <td><strong>carbohydrate sulfotransferase 2.1</strong></td>
+          <td><code>KRTAP29-1</code></td>
+          <td>↑ INCREASE</td>
+          <td>0.5283</td>
+          <td>69%</td>
+          <td>0.000</td>
+          <td>0.5283</td>
+          <td>0</td>
+          <td>—</td>
+        </tr></tbody>
+  </table>
+
+  <div class="callout" style="margin-top:32px;">
+    <strong>Interpretation note:</strong> These are computationally nominated
+    therapeutic candidates based on counterfactual analysis of the VAE latent
+    space. Causal claims require experimental validation. These findings should
+    be treated as hypothesis-generating, not mechanistically proven.
+    Priority score = counterfactual importance × (1 + druggability score).
+  </div>
+</div>
+</body>
+</html>
