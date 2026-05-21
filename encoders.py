@@ -412,7 +412,7 @@ def pretrain_all_vaes(train_dataset, feature_dims, device,
     soma_data = extract_modality_tensors(train_dataset, "somalogic")
     soma_vae  = SomaLogicVAE(
         input_dim=feature_dims["somalogic"],
-        latent_dim=128, beta=4.0
+        latent_dim=128, beta=16.0
     )
     soma_vae = pretrain_vae(
         soma_vae, soma_data, device,

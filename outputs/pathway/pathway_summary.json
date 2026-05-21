@@ -1,0 +1,7 @@
+{
+  "n_pathways_analyzed": 15,
+  "top_mortality_pathway": "Toll-Like Receptor Signaling",
+  "top_mortality_auroc_drop": 0.1196,
+  "top_plasma_pathway": "Glycolysis & Energy Metabolism",
+  "top_plasma_convergence": -0.025699999183416367
+}
