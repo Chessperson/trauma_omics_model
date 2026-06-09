@@ -1,0 +1,16 @@
+{
+  "n_patients": 134,
+  "n_test_patients": 27,
+  "mortality_rate": 0.08955223880597014,
+  "auroc_zero_shot": 0.7964480874316939,
+  "auroc_finetuned": 0.9,
+  "auprc_finetuned": 0.3666666666666667,
+  "pamper_auroc": 0.875,
+  "ft_epochs": 80,
+  "ft_lr": 0.0001,
+  "tp0_distance": 0.7927510142326355,
+  "tp24_distance": 0.5199963450431824,
+  "convergence": 0.2727546691894531,
+  "convergence_p": 0.127,
+  "convergence_effect": 5.492758872977607
+}

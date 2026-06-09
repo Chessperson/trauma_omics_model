@@ -5,3 +5,8 @@ outputs/checkpoints/
 __pycache__/
 *.pyc
 .DS_Store
+synthetic_PAMPer_External_full.xlsx.backup
+outputs/latents_joint/
+outputs/graph_prior/
+outputs/multiscale/
+outputs/offline_rl/
