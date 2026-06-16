@@ -58,10 +58,10 @@ FOLD       = 0        # use fold 0 trained model
 
 # Counterfactual optimization settings
 CF_LR           = 0.05    # step size for latent perturbation
-CF_STEPS        = 500     # max gradient steps
+CF_STEPS        = 1000     # max gradient steps
 CF_TARGET_PROB  = 0.30    # push non-survivors below this mortality probability
 CF_LAMBDA_DIST  = 0.5     # regularization: penalize large latent perturbations
-CF_PATIENCE     = 50      # stop early if loss hasn't improved
+CF_PATIENCE     = 400      # stop early if loss hasn't improved
 
 
 # ── Load protein names ────────────────────────────────────────────────────────
@@ -282,7 +282,17 @@ def find_counterfactual(
             best_prob  = current_prob
             break
 
-        # Early stopping
+        # Momentum restart when stuck — nudge harder toward survivor centroid
+        if no_improve == 150:
+            with torch.no_grad():
+                delta_z.data = best_delta.clone() + direction * 0.3
+            optimizer = torch.optim.Adam([delta_z], lr=lr * 2.0)
+        # Hard restart at 300 steps stuck — try opposite direction
+        if no_improve == 300:
+            with torch.no_grad():
+                delta_z.data = direction * 0.5
+            optimizer = torch.optim.Adam([delta_z], lr=lr)
+        # Early stopping only after restart attempts
         if no_improve >= patience:
             break
 
