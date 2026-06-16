@@ -255,7 +255,68 @@ def plot_latent_covariance(vae, protein_indices, protein_names,
     except Exception as e:
         print(f"  Plot skipped: {e}")
  
- 
+def build_pathway_graph(protein_names, n_proteins=200):
+    """
+    Build adjacency matrix from pathway co-membership.
+    Two proteins share an edge if they belong to the same pathway.
+    This is the primary graph construction method — denser and more
+    biologically meaningful than STRING PPI for diverse protein sets.
+    """
+    pathways = {
+        'TLR_signaling':    ['toll-like receptor', 'tlr', 'myd88', 'traf6'],
+        'innate_immune':    ['interferon', 'innate', 'nf-kb', 'inflammatory'],
+        'complement':       ['complement', 'factor h', 'factor d'],
+        'coagulation':      ['coagul', 'thrombin', 'fibrin', 'plasminogen'],
+        'apoptosis':        ['apoptosis', 'caspase', 'bcl-', 'cytochrome c'],
+        'wnt_signaling':    ['wnt', 'frizzled', 'catenin', 'dickkopf',
+                             'sclerostin', 'axin', 'lrp5', 'lrp6'],
+        'tgf_bmp':          ['tgf', 'bmp', 'smad', 'activin', 'noggin',
+                             'bone morphogenetic', 'growth/differentiation factor'],
+        'jak_stat':         ['jak', 'stat', 'cytokine receptor', 'interleukin'],
+        'ecm_remodeling':   ['integrin', 'collagen', 'fibronectin', 'laminin',
+                             'metalloproteinase', 'timp'],
+        'ras_mapk':         ['ras-related', 'ras protein', 'raf', 'mapk',
+                             'kinase-interacting', 'rab-'],
+        'oxidative_stress': ['heme oxygenase', 'oxidative', 'glutathione',
+                             'superoxide', 'haptoglobin'],
+        'rna_processing':   ['ribonucleoprotein', 'rna helicase', 'splicing',
+                             'hnrnp', 'muscleblind', 'poly(rc)'],
+        'ubiquitin':        ['ubiquitin', 'nedd8', 'sumo', 'proteasome'],
+        'cell_adhesion':    ['adhesion', 'cadherin', 'vcam', 'icam',
+                             'vascular cell adhesion'],
+        'neutrophil':       ['neutrophil', 'myeloblastin', 'elastase',
+                             'myeloperoxidase', 'prtn3'],
+        'synaptic':         ['synaptotagmin', 'synap'],
+        'dna_repair':       ['dna repair', 'xrcc', 'bap1', 'endonuclease'],
+        'growth_factor':    ['growth factor', 'igf', 'fgf', 'egf receptor',
+                             'insulin-like growth'],
+    }
+
+    top = protein_names[:n_proteins]
+    memberships = {p: [] for p in top}
+    for pname in top:
+        plow = pname.lower()
+        for pw, keywords in pathways.items():
+            if any(kw in plow for kw in keywords):
+                memberships[pname].append(pw)
+
+    rows, cols, vals = [], [], []
+    for pw in pathways:
+        members = [p for p, pws in memberships.items() if pw in pws]
+        for i in range(len(members)):
+            for j in range(i + 1, len(members)):
+                pi = protein_names.index(members[i])
+                pj = protein_names.index(members[j])
+                rows.extend([pi, pj])
+                cols.extend([pj, pi])
+                vals.extend([0.8, 0.8])
+
+    n_edges = len(rows) // 2
+    print(f"  Pathway graph: {len([p for p,pws in memberships.items() if pws])} proteins, "
+          f"{n_edges} edges across {len(pathways)} pathways")
+    return rows, cols, vals, list(range(n_proteins))
+
+
 def main(data_dir="./"):
     os.makedirs(CFG["output_dir"], exist_ok=True)
     device = get_device()
@@ -274,27 +335,126 @@ def main(data_dir="./"):
  
     print(f"\nStep 1: Getting gene symbols for top {CFG['top_n_proteins']} proteins...")
     known_symbols = {
-        "haptoglobin": "HP", "heme oxygenase 2": "HMOX2",
-        "insulin-like growth factor-binding protein 2": "IGFBP2",
-        "lymphocyte-specific protein 1": "LSP1",
-        "pancreatic alpha-amylase": "AMY2A",
-        "protein-tyrosine sulfotransferase 2": "TPST2",
-        "endonuclease 8-like 1": "NEIL1",
-        "inositol-tetrakisphosphate 1-kinase": "ITPK1",
-        "prolactin receptor": "PRLR", "c-c motif chemokine 15": "CCL15",
-        "transgelin-3": "TAGLN3", "catenin beta-1": "CTNNB1",
-        "activin receptor type-2b": "ACVR2B", "sorting nexin-11": "SNX11",
-        "calsequestrin-2": "CASQ2", "synaptotagmin-5": "SYT5",
-        "adp-ribosylation factor-like protein 15": "ARL15",
-        "lymphocyte function-associated antigen 3": "CD58",
-        "toll-like receptor 4": "TLR4", "toll-like receptor 1": "TLR1",
-        "toll-like receptor 10": "TLR10", "pcna-associated factor": "KIAA0101",
-        "dnaj homolog subfamily c member 11": "DNAJC11",
-        "eukaryotic translation initiation factor 4b": "EIF4B",
-        "tumor necrosis factor receptor superfamily member": "TNFRSF1A",
-        "leucine-rich repeat-containing protein 4c": "LRRC4C",
-        "histone deacetylase 4": "HDAC4", "semaphorin-6a": "SEMA6A",
-        "filamin-a": "FLNA", "killer cell lectin-like receptor": "KLRG1",
+        # ── Original entries ─────────────────────────────────────────
+        "haptoglobin":                                   "HP",
+        "heme oxygenase 2":                              "HMOX2",
+        "insulin-like growth factor-binding protein 2":  "IGFBP2",
+        "lymphocyte-specific protein 1":                 "LSP1",
+        "pancreatic alpha-amylase":                      "AMY2A",
+        "protein-tyrosine sulfotransferase 2":           "TPST2",
+        "endonuclease 8-like 1":                         "NEIL1",
+        "inositol-tetrakisphosphate 1-kinase":           "ITPK1",
+        "prolactin receptor":                            "PRLR",
+        "c-c motif chemokine 15":                        "CCL15",
+        "transgelin-3":                                  "TAGLN3",
+        "catenin beta-1":                                "CTNNB1",
+        "activin receptor type-2b":                      "ACVR2B",
+        "sorting nexin-11":                              "SNX11",
+        "calsequestrin-2":                               "CASQ2",
+        "synaptotagmin-5":                               "SYT5",
+        "adp-ribosylation factor-like protein 15":       "ARL15",
+        "lymphocyte function-associated antigen 3":      "CD58",
+        "toll-like receptor 4":                          "TLR4",
+        "toll-like receptor 1":                          "TLR1",
+        "toll-like receptor 10":                         "TLR10",
+        "pcna-associated factor":                        "KIAA0101",
+        "dnaj homolog subfamily c member 11":            "DNAJC11",
+        "eukaryotic translation initiation factor 4b":   "EIF4B",
+        "tumor necrosis factor receptor superfamily":    "TNFRSF1A",
+        "leucine-rich repeat-containing protein 4c":     "LRRC4C",
+        "histone deacetylase 4":                         "HDAC4",
+        "semaphorin-6a":                                 "SEMA6A",
+        "filamin-a":                                     "FLNA",
+        "killer cell lectin-like receptor":              "KLRG1",
+        # ── New entries from top 200 ──────────────────────────────────
+        "trna-specific adenosine deaminase 2":           "ADAT2",
+        "surfactant-associated protein 2":               "SFTA2",
+        "nacht, lrr and pyd domains-containing protein 1": "NLRP1",
+        "heterogeneous nuclear ribonucleoprotein r":     "HNRNPR",
+        "leukocyte immunoglobulin-like receptor subfamily b member 2": "LILRB2",
+        "protein arginine n-methyltransferase 2":        "PRMT2",
+        "transmembrane emp24 domain-containing protein 9": "TMED9",
+        "melanoma-associated antigen d1":                "MAGED1",
+        "netrin receptor unc5d":                         "UNC5D",
+        "ets translocation variant 4":                   "ETV4",
+        "adp-ribosylation factor-like protein 11":       "ARL11",
+        "serine/threonine-protein kinase sgk1":          "SGK1",
+        "wnt1-inducible-signaling pathway protein 1":    "WISP1",
+        "growth/differentiation factor 10":              "GDF10",
+        "leucine-rich repeat and fibronectin type iii domain-containing protein 1": "LRFN1",
+        "cd29":                                          "ITGB1",
+        "myeloblastin":                                  "PRTN3",
+        "ras-related protein r-ras":                     "RRAS",
+        "low affinity immunoglobulin gamma fc region receptor iii": "FCGR3A",
+        "noggin":                                        "NOG",
+        "twisted gastrulation protein homolog 1":        "TWSG1",
+        "dickkopf-related protein 1":                    "DKK1",
+        "integrin beta-6":                               "ITGB6",
+        "ras-related c3 botulinum toxin substrate 3":    "RAC3",
+        "protein tyrosine phosphatase type iva 1":       "PTP4A1",
+        "bone morphogenetic protein 8b":                 "BMP8B",
+        "slp adapter and csk-interacting membrane protein": "SCIMP",
+        "ena/vasp-like protein":                         "EVL",
+        "leucine-rich repeat-containing g-protein coupled receptor 4": "LGR4",
+        "fibroblast growth factor receptor 3":           "FGFR3",
+        "signal transducer and activator of transcription 5b": "STAT5B",
+        "megakaryocyte-associated tyrosine-protein kinase": "MATK",
+        "nuclear apoptosis-inducing factor 1":           "NAIF1",
+        "dna repair protein xrcc1":                      "XRCC1",
+        "ras-related protein rab-3c":                    "RAB3C",
+        "interferon lambda-1":                           "IFNL1",
+        "interferon gamma receptor 1":                   "IFNGR1",
+        "tnf receptor-associated factor 1":              "TRAF1",
+        "calbindin":                                     "CALB1",
+        "synaptotagmin-2":                               "SYT2",
+        "vps10 domain-containing receptor sorcs2":       "SORCS2",
+        "legumain":                                      "LGMN",
+        "interleukin-7":                                 "IL7",
+        "ubiquitin-like protein nedd8":                  "NEDD8",
+        "slit homolog 2 protein":                        "SLIT2",
+        "ras-related protein rab-1a":                    "RAB1A",
+        "galactose-3-o-sulfotransferase 2":              "GAL3ST2",
+        "oligodendrocyte transcription factor 1":        "OLIG1",
+        "heparan-sulfate 6-o-sulfotransferase 3":        "HS6ST3",
+        "hematopoietic prostaglandin d synthase":        "HPGDS",
+        "atp-dependent rna helicase a":                  "DHX9",
+        "muscleblind-like protein 1":                    "MBNL1",
+        "integrin alpha-11":                             "ITGA11",
+        "transcription elongation factor a protein 1":   "TCEA1",
+        "protein s100-a9":                               "S100A9",
+        "hypoxanthine-guanine phosphoribosyltransferase": "HPRT1",
+        "map kinase-interacting serine/threonine-protein kinase 1": "MKNK1",
+        "calcineurin b homologous protein 3":             "CHP3",
+        "short-chain specific acyl-coa dehydrogenase":   "ACADS",
+        "secreted frizzled-related protein 1":           "SFRP1",
+        "poly(rc)-binding protein 3":                    "PCBP3",
+        "leukocyte cell-derived chemotaxin-2":           "LECT2",
+        "vascular cell adhesion protein 1":              "VCAM1",
+        "oxysterol-binding protein 1":                   "OSBP",
+        "prostate-specific antigen":                     "KLK3",
+        "metalloproteinase inhibitor 1":                 "TIMP1",
+        "frizzled-2":                                    "FZD2",
+        "protein wnt-11":                                "WNT11",
+        "dedicator of cytokinesis protein 2":            "DOCK2",
+        "gdp-fucose protein o-fucosyltransferase 1":     "POFUT1",
+        "phosphoglycerate kinase 2":                     "PGK2",
+        "sclerostin":                                    "SOST",
+        "tropomyosin alpha-3 chain":                     "TPM3",
+        "interleukin-27":                                "IL27",
+        "ubiquitin carboxyl-terminal hydrolase bap1":    "BAP1",
+        "interleukin-7":                                 "IL7",
+        "vascular cell adhesion":                        "VCAM1",
+        "bone morphogenetic protein":                    "BMP2",
+        "ras-related protein rab":                       "RAB1A",
+        "interferon alpha":                              "IFNA1",
+        "serine protease inhibitor":                     "SERPINA1",
+        "dual specificity protein phosphatase 13":       "DUSP13",
+        "protein s100-a":                                "S100A1",
+        "ubiquitin d":                                   "UBD",
+        "prostasin":                                     "PRSS8",
+        "galectin-related protein":                      "LGALSL",
+        "interleukin-27":                                "IL27",
+        "interleukin-7":                                 "IL7",
     }
  
     top_proteins    = protein_names[:CFG["top_n_proteins"]]
@@ -371,19 +531,11 @@ def main(data_dir="./"):
             i, j = graph_to_local[pa], graph_to_local[pb]
             rows.extend([i, j]); cols.extend([j, i]); vals.extend([sc, sc])
  
-    if not rows:
-        print("  WARNING: No edges. Using pathway-based fallback...")
-        from pathway_perturbation import map_proteins_to_pathways
-        pw_map = map_proteins_to_pathways(protein_names)
-        for pw, members in pw_map.items():
-            local_m = [m[0] for m in members if m[0] < CFG["top_n_proteins"]]
-            for ii in range(len(local_m)):
-                for jj in range(ii+1, min(ii+5, len(local_m))):
-                    pi, pj = local_m[ii], local_m[jj]
-                    rows.extend([pi, pj]); cols.extend([pj, pi])
-                    vals.extend([0.7, 0.7])
-        n_graph         = CFG["top_n_proteins"]
-        local_to_global = list(range(n_graph))
+    if len(rows) < 20:
+        print("  STRING edges sparse — switching to pathway co-membership graph...")
+        rows, cols, vals, local_to_global = build_pathway_graph(
+            protein_names, n_proteins=CFG["top_n_proteins"])
+        n_graph = CFG["top_n_proteins"]
  
     adj = csr_matrix((vals, (rows, cols)), shape=(n_graph, n_graph))
     scipy.sparse.save_npz(
