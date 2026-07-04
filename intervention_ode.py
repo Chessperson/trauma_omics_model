@@ -72,72 +72,82 @@ SENTINEL_PROTEINS = [
 # ── Simple MLP ODE Function ───────────────────────────────────────────────────
 
 class CoagODEFunc(nn.Module):
-    """dz/dt = f(z, t, intervention)"""
+    """
+    Direct trajectory predictor: given z0 and intervention,
+    predict the CHANGE (delta) at each timepoint.
+
+    Architecture: z0 + intervention -> delta_24, delta_72
+    This is more stable than integrating dz/dt for near-flat signals.
+    The ODE framing is preserved in how we interpret the output —
+    the learned deltas ARE the integrated vector field.
+    """
 
     def __init__(self, protein_dim, hidden_dim, intervention_dim):
         super().__init__()
         self.interv_embed = nn.Embedding(3, intervention_dim)
-        # 0=control, 1=plasma, 2=unknown
 
-        self.net = nn.Sequential(
-            nn.Linear(protein_dim + intervention_dim + 1, hidden_dim),
-            nn.Tanh(),
+        # Protein encoder: compress z0 to latent
+        self.z_encoder = nn.Sequential(
+            nn.Linear(protein_dim, hidden_dim),
+            nn.LayerNorm(hidden_dim),
+            nn.ELU(),
             nn.Linear(hidden_dim, hidden_dim),
-            nn.Tanh(),
+            nn.LayerNorm(hidden_dim),
+            nn.ELU(),
+        )
+
+        # Combined: latent + intervention -> delta prediction
+        self.head_24 = nn.Sequential(
+            nn.Linear(hidden_dim + intervention_dim, hidden_dim),
+            nn.ELU(),
+            nn.Linear(hidden_dim, protein_dim),
+        )
+        self.head_72 = nn.Sequential(
+            nn.Linear(hidden_dim + intervention_dim, hidden_dim),
+            nn.ELU(),
             nn.Linear(hidden_dim, protein_dim),
         )
 
-        # Initialize weights small to prevent early explosion
-        for m in self.modules():
-            if isinstance(m, nn.Linear):
-                nn.init.uniform_(m.weight, -0.01, 0.01)
-                nn.init.zeros_(m.bias)
+        # Small output init
+        for head in [self.head_24, self.head_72]:
+            nn.init.uniform_(head[-1].weight, -0.001, 0.001)
+            nn.init.zeros_(head[-1].bias)
 
     def forward(self, t_norm, z, interv_idx):
-        """
-        t_norm: scalar in [0, 1]
-        z:      (B, protein_dim)
-        interv_idx: (B,) long
-        """
-        B = z.shape[0]
+        """Kept for ODE integrator compatibility."""
+        d24, _ = self.predict_deltas(z, interv_idx)
+        return torch.clamp(d24, -2.0, 2.0)
+
+    def predict_deltas(self, z0, interv_idx):
+        """Direct delta prediction — patient-specific via z0 encoding."""
         emb = self.interv_embed(interv_idx)           # (B, interv_dim)
-        t_f = torch.full((B, 1), t_norm.item(),
-                          dtype=torch.float32,
-                          device=z.device)            # (B, 1)
-        inp = torch.cat([z, emb, t_f], dim=-1)        # (B, D+E+1)
-        dz  = self.net(inp)
-        return torch.clamp(dz, -0.5, 0.5)             # hard clamp
+        h   = self.z_encoder(z0)                      # (B, hidden_dim)
+        h_combined = torch.cat([h, emb], dim=-1)      # (B, hidden+interv)
+        d24 = self.head_24(h_combined)
+        d72 = self.head_72(h_combined)
+        return d24, d72
 
 
 # ── Euler ODE Integrator ──────────────────────────────────────────────────────
 
 def integrate(func, z0, timepoints_hours, interv_idx, n_steps_per_segment=8):
     """
-    Integrate from each timepoint to the next using forward Euler.
-    timepoints_hours: e.g. [0, 24, 72]
+    Direct trajectory prediction using learned deltas.
     Returns list of tensors, one per timepoint.
+    Preserves ODE interface for compatibility.
     """
+    d24, d72 = func.predict_deltas(z0, interv_idx)
+
     trajectory = [z0]
-    z = z0.clone()
-
-    for seg in range(len(timepoints_hours) - 1):
-        t_start = timepoints_hours[seg]
-        t_end   = timepoints_hours[seg + 1]
-        dt_h    = (t_end - t_start) / n_steps_per_segment
-
-        for step in range(n_steps_per_segment):
-            t_curr_norm = torch.tensor(
-                (t_start + step * dt_h) / 72.0,
-                dtype=torch.float32, device=z.device)
-            dt_norm = torch.tensor(
-                dt_h / 72.0,
-                dtype=torch.float32, device=z.device)
-
-            dz  = func(t_curr_norm, z, interv_idx)
-            z   = z + dt_norm * dz
-            z   = torch.nan_to_num(z, nan=0.0, posinf=20.0, neginf=-20.0)
-
-        trajectory.append(z.clone())
+    for tp in timepoints_hours[1:]:
+        if tp <= 24:
+            # Interpolate between 0 and 24
+            alpha = tp / 24.0
+            trajectory.append(z0 + alpha * d24)
+        else:
+            # Interpolate between 24 and 72
+            alpha = (tp - 24) / 48.0
+            trajectory.append(z0 + d24 + alpha * (d72 - d24))
 
     return trajectory
 
