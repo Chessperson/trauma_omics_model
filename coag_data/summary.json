@@ -1,0 +1,63 @@
+{
+  "pamper_patients": 151,
+  "pamper_proteins": 33,
+  "pamper_timepoints": [
+    0,
+    24,
+    72
+  ],
+  "pamper_plasma": 65,
+  "pamper_control": 84,
+  "pamper_deaths": 62,
+  "precise_patients": 148,
+  "precise_proteins": 33,
+  "precise_timepoints": [
+    0,
+    24
+  ],
+  "precise_sites": {
+    "MTH": 100,
+    "WIN": 90,
+    "UWA": 38,
+    "VMC": 30,
+    "CMC": 16,
+    "UMD": 12,
+    "UKY": 8,
+    "HOU": 2
+  },
+  "shared_proteins": [
+    "coagulation factor v",
+    "coagulation factor vii",
+    "coagulation factor viii",
+    "coagulation factor ix",
+    "coagulation factor ixab",
+    "coagulation factor x",
+    "coagulation factor xa",
+    "coagulation factor xi",
+    "coagulation factor xiii",
+    "coagulation factor xiii b chain",
+    "fibrinogen",
+    "fibrinogen beta chain",
+    "fibrinogen gamma chain",
+    "fibrinogen-like protein 1",
+    "fibrinogen c domain-containing protein 1",
+    "plasminogen",
+    "plasminogen activator inhibitor 1",
+    "tissue-type plasminogen activator",
+    "urokinase-type plasminogen activator",
+    "urokinase plasminogen activator surface receptor",
+    "thrombin",
+    "prothrombin",
+    "antithrombin-iii",
+    "activated protein c",
+    "activated protein c.1",
+    "vitamin k-dependent protein c",
+    "vitamin k-dependent protein s",
+    "soluble endothelial protein c receptor",
+    "von willebrand factor",
+    "tissue factor",
+    "tissue factor pathway inhibitor",
+    "tissue factor pathway inhibitor 2",
+    "mannose-binding protein c"
+  ]
+}
