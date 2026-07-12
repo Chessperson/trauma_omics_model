@@ -1,0 +1,52 @@
+{
+  "protein_cols": [
+    "coagulation factor v",
+    "coagulation factor vii",
+    "coagulation factor viii",
+    "coagulation factor ix",
+    "coagulation factor ixab",
+    "coagulation factor x",
+    "coagulation factor xa",
+    "coagulation factor xi",
+    "coagulation factor xiii",
+    "coagulation factor xiii b chain",
+    "fibrinogen",
+    "fibrinogen beta chain",
+    "fibrinogen gamma chain",
+    "fibrinogen-like protein 1",
+    "fibrinogen c domain-containing protein 1",
+    "plasminogen",
+    "plasminogen activator inhibitor 1",
+    "tissue-type plasminogen activator",
+    "urokinase-type plasminogen activator",
+    "urokinase plasminogen activator surface receptor",
+    "thrombin",
+    "prothrombin",
+    "antithrombin-iii",
+    "activated protein c",
+    "activated protein c.1",
+    "vitamin k-dependent protein c",
+    "vitamin k-dependent protein s",
+    "soluble endothelial protein c receptor",
+    "von willebrand factor",
+    "tissue factor",
+    "tissue factor pathway inhibitor",
+    "tissue factor pathway inhibitor 2",
+    "mannose-binding protein c"
+  ],
+  "fold_losses": [
+    0.07753537595272064,
+    0.08120964467525482,
+    0.0972459688782692,
+    0.111160047352314,
+    0.0894717201590538
+  ],
+  "mean_val_loss": 0.0913245514035225,
+  "r_pamper": 0.9898660778999329,
+  "training_data": {
+    "PAMPer_ctrl": 84,
+    "PAMPer_plasma": 65,
+    "SWAT_patients": 134,
+    "SWAT_dose_mean": 0.2814413905143738
+  }
+}
